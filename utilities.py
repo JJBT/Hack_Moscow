@@ -28,7 +28,10 @@ def get_train_data(path_to_data, flatten=True, mfcc_len=MFCC_LEN):
     data = []
     labels = []
     cur_dir = os.getcwd()
+
+    os.chdir(ROOT)
     os.chdir(path_to_data)
+
     for i, directory in enumerate(class_labels):
         os.chdir(directory)
         for filename in os.listdir('.'):
@@ -59,7 +62,7 @@ def get_train_data(path_to_data, flatten=True, mfcc_len=MFCC_LEN):
 
         os.chdir('..')
 
-    os.chdir(cur_dir)
+    os.chdir(ROOT)
 
     x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.3, random_state=42)
 
@@ -106,7 +109,8 @@ def convert_from_file(filename, flatten, mfcc_len):
 
 def convert_from_dir(directory, flatten, mfcc_len):
     data = []
-    # cur_dir = os.getcwd()
+    cur_dir = os.getcwd()
+    os.chdir(ROOT)
     os.chdir(directory)
 
     for filename in os.listdir('.'):

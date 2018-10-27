@@ -1,5 +1,6 @@
 import numpy as np
 import sys
+import os
 from keras import Sequential
 from keras.layers import LSTM, Dense, Dropout, Conv2D, Flatten, \
     BatchNormalization, Activation, MaxPooling2D
@@ -7,6 +8,7 @@ from keras.utils import np_utils
 from tqdm import tqdm
 
 from utilities import get_train_data, class_labels
+from Constants import *
 
 models = ["CNN", "LSTM"]
 
@@ -49,12 +51,11 @@ def get_model(model_name, input_shape):
     return model
 
 
-def evaluateModel(model):
+def evaluate_model(model, x_train, x_test, y_train, y_test):
     # Train the epochs
     best_acc = 0
-    global x_train, y_train, x_test, y_test
+
     for i in tqdm(range(50)):
-        # Shuffle the data for each epoch in unison inspired from https://stackoverflow.com/a/4602224
         p = np.random.permutation(len(x_train))
         x_train = x_train[p]
         y_train = y_train[p]
@@ -63,41 +64,38 @@ def evaluateModel(model):
         if acc > best_acc:
             print('Updated best accuracy', acc)
             best_acc = acc
-            model.save_weights(best_model_path)
-    model.load_weights(best_model_path)
+            model.save_weights(BEST_MODEL_PATH_DNN)
+
+    model.load_weights(BEST_MODEL_PATH_DNN)
     print('Accuracy = ', model.evaluate(x_test, y_test)[1])
 
 
-if __name__ == "__main__":
-
-    if len(sys.argv) != 2:
-        sys.stderr.write('Invalid arguments\n')
-        sys.stderr.write('Usage python train_DNN.py <model_number>\n')
-        sys.stderr.write('1 - CNN\n')
-        sys.stderr.write('2 - LSTM\n')
-        sys.exit(-1)
-
-    n = int(sys.argv[1]) - 1
+def start(n):
+    """
+    :param n: 1-CNN, 2-LSTM
+    """
     print('model given', models[n])
 
     # Read data
-    global x_train, y_train, x_test, y_test
-    x_train, x_test, y_train, y_test = get_train_data(flatten=False)
+    x_train, x_test, y_train, y_test = get_train_data(path_to_data=PATH_TO_DATA, flatten=False)
     y_train = np_utils.to_categorical(y_train)
     y_test = np_utils.to_categorical(y_test)
+
+    os.chdir(ROOT)
 
     if n == 0:
         # Model is CNN so have to reshape the data
         in_shape = x_train[0].shape
         x_train = x_train.reshape(x_train.shape[0], in_shape[0], in_shape[1], 1)
         x_test = x_test.reshape(x_test.shape[0], in_shape[0], in_shape[1], 1)
-    elif n > len(models):
-        sys.stderr.write('Model Not Implemented yet')
-        sys.exit(-1)
 
     model = get_model(models[n], x_train[0].shape)
 
-    global best_model_path
-    best_model_path = '../models/best_model_' + models[n - 1] + '.h5'
+    evaluate_model(model, x_train, x_test, y_train, y_test)
 
-    evaluateModel(model)
+
+if __name__ == '__main__':
+    n = int(sys.argv[1]) - 1
+    start(n)
+
+
