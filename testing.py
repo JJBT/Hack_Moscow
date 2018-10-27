@@ -13,7 +13,10 @@ if __name__ == '__main__':
     test()
     for i in get_train_data(PATH_TO_DATA)[0]:
         print(i)
+        print(len(i))
     print("----")
+
     print(convert_new_data(PATH_TO_REALDATA))
+    print(len(convert_new_data(PATH_TO_REALDATA)[0]))
 
 
