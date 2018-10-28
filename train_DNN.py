@@ -1,3 +1,6 @@
+"""Training LSTM"""
+
+
 import numpy as np
 import sys
 import os
@@ -26,24 +29,26 @@ def get_model(input_shape):
     return model
 
 
-def evaluate_model(model, x_train, x_test, y_train, y_test):
+def evaluate_model(model, x_train, x_test, y_train, y_test, weights):
     # Train the epochs
     best_acc = 0
 
-    # for i in tqdm(range(50)):
-    #     p = np.random.permutation(len(x_train))
-    #     x_train = x_train[p]
-    #     y_train = y_train[p]
-    #     model.fit(x_train, y_train, batch_size=32, epochs=1)
-    #     loss, acc = model.evaluate(x_test, y_test)
-    #     if acc > best_acc:
-    #         print('Updated best accuracy', acc)
-    #         best_acc = acc
-    #         model.save_weights(BEST_MODELS_WEIGHTS_PATH_DNN)
-    #
-    # model.load_weights(BEST_MODELS_WEIGHTS_PATH_DNN)
+    print(weights)
 
-    model.fit(x_train, y_train, batch_size=32, epochs=50)
+    for i in tqdm(range(50)):
+        p = np.random.permutation(len(x_train))
+        x_train = x_train[p]
+        y_train = y_train[p]
+        model.fit(x_train, y_train, batch_size=32, epochs=1, sample_weight=weights)
+        loss, acc = model.evaluate(x_test, y_test)
+        if acc > best_acc:
+            print('Updated best accuracy', acc)
+            best_acc = acc
+            model.save_weights(BEST_MODELS_WEIGHTS_PATH_DNN)
+
+    model.load_weights(BEST_MODELS_WEIGHTS_PATH_DNN)
+
+    # model.fit(x_train, y_train, batch_size=32, epochs=50, sample_weight=weights)
 
     print('Accuracy = ', model.evaluate(x_test, y_test)[1])
     model.save(BEST_MODEL_DNN)
@@ -52,7 +57,7 @@ def evaluate_model(model, x_train, x_test, y_train, y_test):
 def start():
 
     # Read data
-    x_train, x_test, y_train, y_test = get_train_data(path_to_data=PATH_TO_DATA, flatten=False)
+    x_train, x_test, y_train, y_test, weights = get_train_data(path_to_data=PATH_TO_DATA, flatten=False)
     y_train = np_utils.to_categorical(y_train)
     y_test = np_utils.to_categorical(y_test)
 
@@ -60,7 +65,7 @@ def start():
 
     model = get_model(x_train[0].shape)
 
-    evaluate_model(model, x_train, x_test, y_train, y_test)
+    evaluate_model(model, x_train, x_test, y_train, y_test, weights)
 
 
 if __name__ == '__main__':

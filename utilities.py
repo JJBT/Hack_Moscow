@@ -1,3 +1,5 @@
+"""Main functions"""
+
 from Constants import *
 
 import numpy as np
@@ -35,6 +37,7 @@ def get_train_data(path_to_data, flatten=True, mfcc_len=MFCC_LEN):
 
     data = []
     labels = []
+    weights = []
     cur_dir = os.getcwd()
 
     os.chdir(ROOT)
@@ -45,6 +48,11 @@ def get_train_data(path_to_data, flatten=True, mfcc_len=MFCC_LEN):
         for filename in os.listdir('.'):
             fs, signal = read_wav(filename)
             s_len = len(signal)
+
+            if filename.find('wg') == -1:
+                weights.append(1)
+            else:
+                weights.append(10)
 
             # scl.fit(signal.reshape(-1, 1))
             # signal = scl.transform(signal.reshape(-1, 1))
@@ -75,9 +83,9 @@ def get_train_data(path_to_data, flatten=True, mfcc_len=MFCC_LEN):
 
     os.chdir(ROOT)
 
-    x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.3, random_state=42)
+    x_train, x_test, y_train, y_test, tr_w, te_w = train_test_split(data, labels, weights, test_size=0.3, random_state=42)
 
-    return np.array(x_train), np.array(x_test), np.array(y_train), np.array(y_test)
+    return np.array(x_train), np.array(x_test), np.array(y_train), np.array(y_test), np.array(tr_w)
 
 
 def display_metrics(y_pred, y_true):
@@ -147,11 +155,11 @@ def decision(data):
 
 
 def prepare_train_data_dnn(path):
-    x_train, x_test, y_train, y_test = get_train_data(path_to_data=path, flatten=False)
+    x_train, x_test, y_train, y_test, weights = get_train_data(path_to_data=path, flatten=False)
     y_train = np_utils.to_categorical(y_train)
     y_test = np_utils.to_categorical(y_test)
 
-    return x_train, x_test, y_train, y_test
+    return x_train, x_test, y_train, y_test, weights
 
 
 def prepare_real_data_dnn(path):

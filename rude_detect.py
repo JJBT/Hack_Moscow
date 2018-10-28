@@ -1,3 +1,6 @@
+"""Context analysis"""
+
+
 import pydub
 import speech_recognition as sr
 from monkeylearn import MonkeyLearn
@@ -57,6 +60,7 @@ def check_text(wav_file_name, swear_words_file, real_text='', wav_file_name2='No
             print('Rude words were used')
         else:
             print('There were no rude words')
+
     else:
 
         speech_to_text_data1 = speech_to_text(wav_file_name=wav_file_name)
@@ -72,13 +76,5 @@ def check_text(wav_file_name, swear_words_file, real_text='', wav_file_name2='No
             print('Rude words were used')
         else:
             print('There were no rude words')
-            print('\n\n')
 
-    return 0
-
-
-def start_check(path):
-    os.chdir("../../")
-    os.chdir(path)
-    for file in os.listdir('.'):
-        check_text(file, '../../swear_words.txt')
+    print('--------')
