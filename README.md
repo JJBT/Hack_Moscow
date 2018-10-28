@@ -1,4 +1,4 @@
-# Hack_Moscow 2
+# Hack.Moscow 2
 Cleverbots track. AI &amp; Humans Simbiosis
 
 ### Prerequisites:
@@ -14,3 +14,5 @@ Cleverbots track. AI &amp; Humans Simbiosis
 - 'ffmpg' and you have to add path to 'ffmpg\bin' to PATH enviroment variable.
 
 *You need to change PATHS in Constants.py* 
+
+*swear_words.txt - rude words dictionary*
