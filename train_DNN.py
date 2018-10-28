@@ -30,18 +30,21 @@ def evaluate_model(model, x_train, x_test, y_train, y_test):
     # Train the epochs
     best_acc = 0
 
-    for i in tqdm(range(50)):
-        p = np.random.permutation(len(x_train))
-        x_train = x_train[p]
-        y_train = y_train[p]
-        model.fit(x_train, y_train, batch_size=32, epochs=1)
-        loss, acc = model.evaluate(x_test, y_test)
-        if acc > best_acc:
-            print('Updated best accuracy', acc)
-            best_acc = acc
-            model.save_weights(BEST_MODELS_WEIGHTS_PATH_DNN)
+    # for i in tqdm(range(50)):
+    #     p = np.random.permutation(len(x_train))
+    #     x_train = x_train[p]
+    #     y_train = y_train[p]
+    #     model.fit(x_train, y_train, batch_size=32, epochs=1)
+    #     loss, acc = model.evaluate(x_test, y_test)
+    #     if acc > best_acc:
+    #         print('Updated best accuracy', acc)
+    #         best_acc = acc
+    #         model.save_weights(BEST_MODELS_WEIGHTS_PATH_DNN)
+    #
+    # model.load_weights(BEST_MODELS_WEIGHTS_PATH_DNN)
 
-    model.load_weights(BEST_MODELS_WEIGHTS_PATH_DNN)
+    model.fit(x_train, y_train, batch_size=32, epochs=50)
+
     print('Accuracy = ', model.evaluate(x_test, y_test)[1])
     model.save(BEST_MODEL_DNN)
 

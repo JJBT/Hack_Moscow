@@ -18,7 +18,7 @@ import warnings
 
 warnings.filterwarnings('ignore')
 
-class_labels = ["Neutral", "Angry", "Happy", "Sad"]
+class_labels = np.array(["Neutral", "Angry", "Happy", "Sad"])
 
 
 def read_wav(filename):

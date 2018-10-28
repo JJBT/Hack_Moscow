@@ -1,6 +1,7 @@
 import pickle
 from utilities import convert_from_dir, convert_new_data, get_train_data,\
-    prepare_real_data_dnn, read_wav, convert_from_file, get_single_pred
+    prepare_real_data_dnn, read_wav, convert_from_file, get_single_pred, class_labels
+from rude_detect import check_text, start_check
 from Constants import *
 from keras.models import load_model
 import numpy as np
@@ -23,16 +24,16 @@ def test_light_model():
 def test_dnn():
     # model = load_model(BEST_MODEL_DNN)
 
+    # model = load_model("models/best_model_dnn.h5")
+
     model = load_model("models/lstm_eng1_85.h5")
 
-    print(model.predict(prepare_real_data_dnn(PATH_TO_REALDATA)))
+    print(class_labels[np.argmax(model.predict(prepare_real_data_dnn(PATH_TO_REALDATA)), axis=1)])
+    print(start_check(PATH_TO_REALDATA))
 
 
 if __name__ == '__main__':
     # test_light_model()
     test_dnn()
-    # print(read_wav("dataset/real_data/2.wav"))
-    # get_train_data(PATH_TO_DATA)
-    # test_light_model()
 
 
