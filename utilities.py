@@ -10,6 +10,9 @@ import speechpy
 from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from keras.utils import np_utils
+import librosa.core
+from scipy import stats
 
 import warnings
 
@@ -19,11 +22,16 @@ class_labels = ["Neutral", "Angry", "Happy", "Sad"]
 
 
 def read_wav(filename):
-    return wav.read(filename)
+    file = librosa.core.load(filename)
+    return file[1], file[0]
 
 
 def get_train_data(path_to_data, flatten=True, mfcc_len=MFCC_LEN):
-    scl = StandardScaler()
+    """
+    Data for training
+    """
+
+    # scl = StandardScaler()
 
     data = []
     labels = []
@@ -37,9 +45,10 @@ def get_train_data(path_to_data, flatten=True, mfcc_len=MFCC_LEN):
         for filename in os.listdir('.'):
             fs, signal = read_wav(filename)
             s_len = len(signal)
-            scl.fit(signal.reshape(-1, 1))
-            signal = scl.transform(signal.reshape(-1, 1))
-            signal = signal.flatten()
+
+            # scl.fit(signal.reshape(-1, 1))
+            # signal = scl.transform(signal.reshape(-1, 1))
+            # signal = signal.flatten()
 
             # pad the signals by zeros to have same size if lesser than required
             # else slice them
@@ -50,8 +59,10 @@ def get_train_data(path_to_data, flatten=True, mfcc_len=MFCC_LEN):
                 signal = np.pad(signal, (pad_len, pad_len + pad_rem), 'constant', constant_values=0)
             else:
                 pad_len = s_len - MSLEN
+                pad_rem = pad_len % 2
                 pad_len = pad_len // 2
                 signal = signal[pad_len:pad_len + MSLEN]
+
             mfcc = speechpy.feature.mfcc(signal, fs, num_cepstral=mfcc_len)
 
             if flatten:
@@ -79,17 +90,18 @@ def save_model(model):
         pickle.dump(model, f, pickle.HIGHEST_PROTOCOL)
 
 
-def convert_from_file(filename, flatten, mfcc_len):
-    scl = StandardScaler()
+def convert_from_file(filename, flatten=True, mfcc_len=MFCC_LEN):
+    # scl = StandardScaler()
     fs, signal = read_wav(filename)
     s_len = len(signal)
 
-    scl.fit(signal.reshape(-1, 1))
-    signal = scl.transform(signal.reshape(-1, 1))
-    signal = signal.flatten()
+    # scl.fit(signal.reshape(-1, 1))
+    # signal = scl.transform(signal.reshape(-1, 1))
+    # signal = signal.flatten()
 
     # pad the signals by zeros to have same size if lesser than required
     # else slice them
+
     if s_len < MSLEN:
         pad_len = MSLEN - s_len
         pad_rem = pad_len % 2
@@ -97,8 +109,10 @@ def convert_from_file(filename, flatten, mfcc_len):
         signal = np.pad(signal, (pad_len, pad_len + pad_rem), 'constant', constant_values=0)
     else:
         pad_len = s_len - MSLEN
+        pad_rem = pad_len % 2
         pad_len = pad_len // 2
         signal = signal[pad_len:pad_len + MSLEN]
+
     mfcc = speechpy.feature.mfcc(signal, fs, num_cepstral=mfcc_len)
 
     if flatten:
@@ -107,14 +121,17 @@ def convert_from_file(filename, flatten, mfcc_len):
     return np.array(mfcc)
 
 
-def convert_from_dir(directory, flatten, mfcc_len):
+def convert_from_dir(directory, flatten=True, mfcc_len=MFCC_LEN):
     data = []
     cur_dir = os.getcwd()
     os.chdir(ROOT)
     os.chdir(directory)
 
     for filename in os.listdir('.'):
-        data.append(convert_from_file(filename, flatten, mfcc_len))
+        temp = convert_from_file(filename, flatten, mfcc_len)
+        if temp is not None:
+            data.append(temp)
+
     # os.chdir(cur_dir)
 
     return np.array(data)
@@ -128,3 +145,49 @@ def convert_new_data(path, flatten=True, mfcc_len=MFCC_LEN):
 def decision(data):
     data.apply(lambda x: 1 if x == 1 or x == 3 else 0, inplace=True)
 
+
+def prepare_train_data_dnn(path):
+    x_train, x_test, y_train, y_test = get_train_data(path_to_data=path, flatten=False)
+    y_train = np_utils.to_categorical(y_train)
+    y_test = np_utils.to_categorical(y_test)
+
+    return x_train, x_test, y_train, y_test
+
+
+def prepare_real_data_dnn(path):
+    data = convert_new_data(path, flatten=False)
+
+    return np.array(data)
+
+
+def get_single_pred(model, sample_file, flatten=True):
+    # scl = StandardScaler()
+    fs, signal = read_wav(sample_file)
+    s_len = len(signal)
+
+    segments = []
+    predictions = []
+
+    if s_len > MSLEN:
+        n = s_len // MSLEN
+        rem = s_len % MSLEN
+
+        signal = signal[rem:]
+        for i in range(n):
+            segments.append(signal[i*MSLEN:(i + 1)*MSLEN])
+
+    # scl.fit(signal.reshape(-1, 1))
+    # signal = scl.transform(signal.reshape(-1, 1))
+    # signal = signal.flatten()
+
+    for i in segments:
+        mfcc = speechpy.feature.mfcc(i, fs, num_cepstral=MFCC_LEN)
+        if flatten:
+            mfcc = mfcc.flatten()
+
+        mfcc = np.array(mfcc)
+        predictions.append(model.predict(mfcc.reshape(1, -1)))
+
+    predictions = np.array(predictions)
+
+    return stats.mode(predictions)[0].flatten()[0]
