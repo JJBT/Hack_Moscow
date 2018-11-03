@@ -1,6 +1,7 @@
 # Hack.Moscow 2
 Cleverbots track. AI &amp; Humans Simbiosis  
-Semantical and emotional analisys of speech.
+Semantical and emotional analisys of speech.  
+............................................
 ### Prerequisites:
 
 - TensorFlow
